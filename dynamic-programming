@@ -1,0 +1,14 @@
+# coding:utf-8
+
+import numpy as np
+
+def d(i):
+    if i == 0:
+        result = 0
+    elif 0 < i < 3:
+        result = i
+    elif 3 <= i < 5:
+        result = min(d(i-1)+1, d(i-3)+1)
+    else:
+        result = min(d(i-1)+1, d(i-3)+1, d(i-5)+1)
+    return result
