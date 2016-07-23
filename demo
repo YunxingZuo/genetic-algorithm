@@ -1,0 +1,108 @@
+#coding: utf-8
+
+from numpy import *
+from random import *
+
+def sufficiency(candidate):    # 适应度计算
+    vect1 = []
+    vect2 = []
+    valueset = []
+    list = [c for c in candidate]
+    length = len(list)
+    s = 0
+    for i in list:
+        if s < length/2:
+            vect1.append(i)
+        else:
+            vect2.append(i)
+        s += 1
+    for j in (vect1, vect2):
+        value = 0
+        for k in range(len(j)):
+            value += int(j[k]) * (2**(len(j)-k-1))
+        valueset.append(value)
+    b = [i**2 for i in valueset]
+    result = sum(b)
+    return result
+
+def simpledata():
+    solutionset = ['011101', '101011', '011100', '111001']
+    return solutionset
+
+def select(solutionset):    # 利用目标函数值作为概率
+    numsolutions = len(solutionset)
+    probasolutions = []
+    for i in solutionset:
+        suffi = sufficiency(i)
+        probasolutions.append(suffi)
+    total = float(mat(probasolutions).sum())
+    temp = [j/total for j in probasolutions]
+    probasolutions = [sum(temp[0:k]) for k in range(1, len(temp)+1)]
+    numpick = zeros((1, 4))[0]
+    for num in range(numsolutions):
+        ran = random()
+        p = 0
+        while (mat(probasolutions) > ran)[0, p] == False: p += 1
+        numpick[p] += 1
+    newsolutionset = []
+    for j in range(len(numpick)):
+        for k in range(int(numpick[j])):
+            newsolutionset.append(solutionset[j])
+    return newsolutionset
+
+def crossover(solutionset):
+    shuffle(solutionset)
+    length = len(solutionset)
+    dict = {}
+    newdict = {}
+    for i in range(length/2):
+        dict[solutionset[i]] = solutionset[i+length/2]
+    for j in dict.keys():
+        sp = crossposition(j)
+        temp = j[sp+1:]
+        p = j[0:sp+1] + dict[j][sp+1:]
+        newdict[p] = dict[j][0:sp+1] + temp
+    newsolutionset = []
+    for k in newdict.keys():
+        newsolutionset.append(k)
+        newsolutionset.append(newdict[k])
+    return newsolutionset
+
+def crossposition(candidate):
+    numofcross = len(candidate) - 1
+    selectedposition = int(round(random()*numofcross))
+    return selectedposition
+
+def varposition(candidate):
+    return int(round(random()*(len(candidate)-1)))
+
+def variation(solutionset, threshold = 0.8):
+    newsolutionset = []
+    for i in solutionset:
+        vp = varposition(i)
+        if random() > threshold:
+            i = i[0:vp] + str(int(i[vp])^1) + i[vp+1:]
+        newsolutionset.append(i)
+    return newsolutionset
+
+def max(solutionset, maxdict):
+    maxsuffi = maxdict.keys()[0]
+    for i in solutionset:
+        suffi = sufficiency(i)
+        if suffi > maxsuffi:
+            del maxdict[maxsuffi]
+            maxsuffi = suffi
+            maxdict[maxsuffi] = i
+    return maxdict
+
+def main(inisolutionset, inidict = {0:'000000'}, iter = 20):
+    maxdict = max(inisolutionset, inidict)
+    solutionset = inisolutionset
+    for i in range(iter):
+        selectedresult = select(solutionset)
+        maxdict = max(selectedresult, maxdict)
+        crossedresult = crossover(selectedresult)
+        maxdict = max(crossedresult, maxdict)
+        variedresult = variation(crossedresult)
+        solutionset = variedresult
+    return maxdict
